@@ -1,0 +1,25 @@
+{
+  "name": "treadmill",
+  "version": "0.0.0",
+  "description": "Treadmill companion application",
+  "main": "main.ts",
+  "type": "module",
+  "scripts": {
+    "start": "node main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/wolfderechter/treadmill"
+  },
+  "author": "wolfderechter",
+  "license": "MIT",
+  "dependencies": {
+    "@stoprocent/noble": "^2.5.5",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0"
+  }
+}
