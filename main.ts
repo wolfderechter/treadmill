@@ -1,33 +1,23 @@
-import noble from "@stoprocent/noble";
-import { decodeTreadmillData } from "./util.ts";
+import { BleManager } from "./ble-manager.ts";
+import { SessionManager } from "./session-manager.ts";
 
-const deviceName = process.env.DEVICE_NAME || "FS-7F5603";
+const ble: BleManager = new BleManager();
+const sessions = new SessionManager(ble);
 
-try {
-  await noble.waitForPoweredOnAsync();
-  await noble.startScanningAsync(["1826"], false); // scan for FTMS devices only
+sessions.on("sessionStart", (session) => {
+  console.log("session started", session);
+});
+sessions.on("sessionEnd", (session) => {
+  console.log("session ended", session);
+  // todo: save this session to db
+});
 
-  noble.on("discover", async (peripheral) => {
-    if (peripheral.advertisement.localName !== deviceName) return;
+ble.on("connected", () => {
+  console.log("connected");
+});
 
-    // Stop scanning for other devices
-    await noble.stopScanningAsync();
-    await peripheral.connectAsync();
-    const { characteristics } =
-      await peripheral.discoverSomeServicesAndCharacteristicsAsync(
-        ["1826"], // FTMS service
-        ["2acd"], // Treadmill data (notify)
-      );
+ble.on("disconnected", () => {
+  console.log("disconnected");
+});
 
-    const treadmillData = characteristics.find((c) => c.uuid === "2acd");
-    if (treadmillData) {
-      await treadmillData.subscribeAsync();
-      treadmillData.on("data", (buffer) => {
-        const data = decodeTreadmillData(buffer);
-        console.log("decodeTreadmillData", data);
-      });
-    }
-  });
-} catch (error) {
-  console.error("Failed to init bluetooth connection", error);
-}
+await ble.connect();
