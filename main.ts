@@ -1,5 +1,6 @@
 import { BleManager } from "./ble-manager.ts";
 import { SessionManager } from "./session-manager.ts";
+import { saveSession } from "./storage.ts";
 
 const ble: BleManager = new BleManager();
 const sessions = new SessionManager(ble);
@@ -9,7 +10,7 @@ sessions.on("sessionStart", (session) => {
 });
 sessions.on("sessionEnd", (session) => {
   console.log("session ended", session);
-  // todo: save this session to db
+  saveSession(session);
 });
 
 ble.on("connected", () => {

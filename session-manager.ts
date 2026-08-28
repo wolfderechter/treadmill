@@ -63,6 +63,8 @@ export class SessionManager extends EventEmitter {
   private endSession(data: TreadmillData): void {
     if (!this.session) return;
 
+    this.session.currentSpeed = 0;
+    this.session.endTime = new Date();
     this.emit("sessionEnd", this.session);
     this.session = null;
   }
