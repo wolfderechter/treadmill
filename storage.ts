@@ -26,3 +26,10 @@ export function saveSession(session: Session) {
     session.totalEnergy,
   );
 }
+
+export function getAllSessions() {
+  const sessions = db.prepare(`
+    SELECT * FROM sessions
+    `);
+  return sessions.all();
+}

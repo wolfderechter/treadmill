@@ -20,6 +20,10 @@ export class SessionManager extends EventEmitter {
     ble.on("data", (data) => this.ingest(data));
   }
 
+  getCurrentSession(): Session | null {
+    return this.session;
+  }
+
   private ingest(data: TreadmillData): void {
     // Session management: detect workouts based on speed changes
     // if speed > 0 and no active session: start session
