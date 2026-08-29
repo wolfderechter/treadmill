@@ -31,11 +31,12 @@ export class SessionManager extends EventEmitter {
       return;
     }
 
-    if (this.session && speed > 0) {
-      this.updateSession(data);
-    }
-    if (this.session && speed === 0) {
-      this.endSession(data);
+    if (this.session) {
+      if (speed > 0) {
+        this.updateSession(data);
+      } else if (speed === 0) {
+        this.endSession();
+      }
     }
   }
 
@@ -53,14 +54,14 @@ export class SessionManager extends EventEmitter {
   private updateSession(data: TreadmillData): void {
     if (!this.session) return;
 
-    this.session.currentSpeed = data.INSTANTANEOUS_SPEED ?? this.session.currentSpeed;
+    this.session.currentSpeed =
+      data.INSTANTANEOUS_SPEED ?? this.session.currentSpeed;
     this.session.totalDistance =
       data.TOTAL_DISTANCE ?? this.session.totalDistance;
     this.session.totalEnergy = data.TOTAL_ENERGY ?? this.session.totalEnergy;
-    console.log('updating existing session', data.TOTAL_DISTANCE);
   }
 
-  private endSession(data: TreadmillData): void {
+  private endSession(): void {
     if (!this.session) return;
 
     this.session.currentSpeed = 0;
