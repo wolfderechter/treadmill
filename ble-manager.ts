@@ -114,14 +114,15 @@ export class BleManager extends EventEmitter {
       }
     });
   }
+
+  async cleanup(): Promise<void> {
+    await this.treadmill?.disconnectAsync();
+    await noble.stopScanningAsync();
+  }
+
   private async reconnect(): Promise<void> {
     await new Promise((r) => setTimeout(r, RECONNECT_DELAY_MS)); // sleep for x ms
     await noble.startScanningAsync(["1826"], false); // scan for FTMS devices only
-  }
-
-  private async cleanup(): Promise<void> {
-    await this.treadmill?.disconnectAsync();
-    await noble.stopScanningAsync();
   }
 
   private async requestControl(): Promise<void> {
@@ -145,5 +146,4 @@ export class BleManager extends EventEmitter {
       });
     });
   }
-
 }

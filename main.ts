@@ -22,3 +22,12 @@ ble.on("disconnected", () => {
 });
 
 await ble.connect();
+
+
+const cleanup = async () => {
+  console.log('cleaning up')
+  await ble.cleanup();
+  process.exit(0);
+}
+process.on("SIGINT", cleanup);
+process.on("SIGTERM", cleanup);
