@@ -4,8 +4,8 @@ import { saveSession, getAllSessions } from "./storage.ts";
 import express from "express";
 
 const app = express();
-const server = app.listen(3000, () => {
-  console.log("server running on http://localhost:3000");
+const server = app.listen(3033, () => {
+  console.log("server running on http://localhost:3033");
 });
 const ble: BleManager = new BleManager();
 const sessions = new SessionManager(ble);
