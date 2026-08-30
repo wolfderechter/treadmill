@@ -1,0 +1,277 @@
+:root {
+  --chassis: #f3f0e8;
+  --chassis-shadow: #d4cebe;
+  --text-dark: #2d2b28;
+  --text-muted: #8c867a;
+  --lcd-bg: #1c1815;
+  --lcd-amber: #e8a200;
+  --lcd-amber-dim: #b37b00;
+
+  /* Accent Key colors */
+  --key-bg: #ffffff;
+  --citrus-orange: #ff6b35;
+  --warm-yellow: #ffc857;
+  --coral-red: #ff495c;
+  --coral-green: #20bf55;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: ui-monospace, "SF Mono", "Consolas", system-ui, sans-serif;
+  background-color: #e3dfd5;
+  background-image: radial-gradient(#cbd4c2 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+  color: var(--text-dark);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+/* Wrapper Layout */
+.container {
+  width: 100%;
+  max-width: 410px;
+}
+
+/* Title Header Above Deck */
+.app-title {
+  margin-bottom: 1rem;
+  border-bottom: 5px dashed #b8b2a2;
+}
+
+.app-title h1 {
+  text-align: center;
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-dark);
+  text-transform: lowercase;
+}
+
+/* Synthesizer Chassis */
+.deck {
+  width: 100%;
+  background: var(--chassis);
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    0 6px 0px var(--chassis-shadow),
+    inset 0 2px 0 #ffffff;
+}
+
+/* Deck Header aligned right */
+.deck-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+/*TODO: delay this element, and animate it expanding */
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: #e7e2d5;
+  padding: 0.3rem 0.6rem;
+  border-radius: 100px;
+  min-height: 22px;
+}
+
+.status-pill .connected {
+  width: 7px;
+  height: 7px;
+  background: var(--coral-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--coral-green);
+}
+
+.status-pill .disconnected {
+  width: 7px;
+  height: 7px;
+  background: var(--coral-red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--coral-red);
+}
+
+/* Label styling */
+.label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+/* Speed Module */
+.speed-module {
+  margin-bottom: 1.5rem;
+}
+
+.speed-dial {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Amber LCD Screen */
+.lcd-screen {
+  flex: 1;
+  background: var(--lcd-bg);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+  border: 2px solid #362d22;
+  min-height: 76px;
+  position: relative;
+}
+
+.speed-val {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--lcd-amber);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255, 176, 0, 0.45);
+}
+
+.lcd-screen .unit {
+  font-size: 0.75rem;
+  color: var(--lcd-amber-dim);
+  font-weight: 700;
+  position: absolute;
+  right: 33px;
+  bottom: 15px;
+}
+
+/* Tactile Keys */
+.key-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  border: none;
+  background: var(--key-bg);
+  color: var(--text-dark);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 5px 0 #d0c9b8,
+    0 6px 10px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.05s ease;
+}
+
+.key-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #d0c9b8;
+}
+.telemetry {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1.75rem;
+  padding: 0.75rem 0;
+  border-top: 2px dashed #b8b2a2;
+  border-bottom: 2px dashed #b8b2a2;
+}
+
+.pod {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: center;
+}
+
+.pod .label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.pod-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.pod-unit {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+/* Transport Pads */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pad-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 0.85rem 0.5rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.05s ease;
+  width: 100px;
+}
+
+.pad-btn i {
+  font-size: 1.1rem;
+}
+
+.pad-btn#start {
+  background: var(--citrus-orange);
+  color: #ffffff;
+  box-shadow: 0 5px 0 #d44d1c;
+}
+
+.pad-btn#pause-resume {
+  background: var(--warm-yellow);
+  color: #5c4300;
+  box-shadow: 0 5px 0 #d6a132;
+  display: none;
+}
+
+.pad-btn#stop {
+  background: var(--coral-red);
+  color: #ffffff;
+  box-shadow: 0 5px 0 #c72c3e;
+  display: none;
+}
+
+.pad-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 transparent !important;
+}

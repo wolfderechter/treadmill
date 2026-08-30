@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Treadmill</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Title above deck with dashed underline -->
+      <header class="app-title">
+        <h1>treadmill</h1>
+      </header>
+
+      <main class="deck">
+        <header class="deck-header">
+          <div class="status-pill">
+            <span id="status-pill-pulse" class="disconnected"></span>
+            <span id="status-pill"></span>
+          </div>
+        </header>
+
+        <!-- Speed Control Dial -->
+        <section class="speed-module">
+          <span class="label">TARGET PACE</span>
+          <div class="speed-dial">
+            <button id="minus" class="key-btn" aria-label="Decrease speed">
+              <i class="ph-bold ph-minus"></i>
+            </button>
+
+            <div class="lcd-screen">
+              <span id="speed" class="speed-val"></span>
+              <span class="unit">KM/H</span>
+            </div>
+
+            <button id="plus" class="key-btn" aria-label="Increase speed">
+              <i class="ph-bold ph-plus"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- Telemetry Grid -->
+        <section class="telemetry">
+          <div class="pod">
+            <span class="label">DISTANCE</span>
+            <div class="pod-val">
+              <span id="distance"></span>
+              <span id="distance-metric" class="pod-unit">KM</span>
+            </div>
+          </div>
+          <div class="pod">
+            <span class="label">TIME</span>
+            <div class="pod-val">
+              <span id="time"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pad Controls -->
+        <section class="actions">
+          <button id="start" class="pad-btn">
+            <i class="ph-bold ph-play"></i>
+            <span>START</span>
+          </button>
+          <button id="pause-resume" class="pad-btn">
+            <i id="pause-resume-icon" class="ph-bold ph-pause"></i>
+            <span id="pause-resume-label">PAUSE</span>
+          </button>
+          <button id="stop" class="pad-btn">
+            <i class="ph-bold ph-square"></i>
+            <span>STOP</span>
+          </button>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

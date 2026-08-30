@@ -1,11 +1,12 @@
 import { BleManager } from "./ble-manager.ts";
 import { SessionManager } from "./session-manager.ts";
 import { saveSession, getAllSessions } from "./storage.ts";
-import { Hono } from "hono";
-import { serve } from "@hono/node-server";
+import express from "express";
 
-const app = new Hono();
-const server = serve(app);
+const app = express();
+const server = app.listen(3000, () => {
+  console.log("server running on http://localhost:3000");
+});
 const ble: BleManager = new BleManager();
 const sessions = new SessionManager(ble);
 
@@ -14,7 +15,8 @@ sessions.on("sessionStart", (session) => {
 });
 sessions.on("sessionEnd", (session) => {
   console.log("session ended", session);
-  saveSession(session);
+  // only save sessions longer than 100m to db
+  if (session.totalDistance > 100) saveSession(session);
 });
 
 ble.on("connected", () => {
@@ -36,37 +38,45 @@ process.on("SIGINT", cleanup);
 process.on("SIGTERM", cleanup);
 
 // Web server
-app.get("/api/session", (c) => {
+app.get("/api/session", (req, res) => {
+  if (!ble.isConnected())
+    return res.status(503).json({ error: "treadmill disconnected" });
+
   const currentSession = sessions.getCurrentSession();
-  return c.json(currentSession);
+  return res.json(currentSession);
 });
-app.get("/api/sessions", (c) => {
+app.get("/api/sessions", (req, res) => {
   const sessions = getAllSessions();
-  console.log("all", sessions);
-  return c.json(sessions);
+  return res.json(sessions);
 });
 
-app.post("/api/start", (c) => {
+app.post("/api/start", (req, res) => {
   ble.start();
-  return c.text("treadmill started");
+  return res.send("treadmill started");
 });
-app.post("/api/stop", (c) => {
+app.post("/api/stop", (req, res) => {
   ble.stop();
-  return c.text("treadmill stopped");
+  return res.send("treadmill stopped");
 });
-app.post("/api/pause", (c) => {
+app.post("/api/pause", (req, res) => {
   ble.pause();
-  return c.text("treadmill paused");
+  sessions.pause();
+  return res.send("treadmill paused");
 });
-app.post("/api/resume", (c) => {
+app.post("/api/resume", (req, res) => {
   ble.resume();
-  return c.text("treadmill resumed");
+  sessions.resume();
+  return res.send("treadmill resumed");
 });
-app.post("/api/speed", (c) => {
-  const speed = c.req.query("speed");
+app.post("/api/speed", (req, res) => {
+  const speed = req.query.speed;
   if (!speed)
-    return c.json({ error: "Missing required query parameter: speed" }, 400);
+    return res
+      .status(400)
+      .json({ error: "Missing required query parameter: speed" });
 
   ble.setSpeed(Number(speed));
-  return c.text(`treadmill speed set to ${speed}`);
+  return res.send(`treadmill speed set to ${speed}`);
 });
+
+app.use(express.static("public"));

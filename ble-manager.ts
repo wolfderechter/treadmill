@@ -15,6 +15,10 @@ export class BleManager extends EventEmitter {
   private treadmill: Peripheral | null = null;
   private treadmillWrite: Characteristic | null = null;
 
+  isConnected(): boolean {
+    return this.treadmill !== null;
+  }
+
   async setSpeed(speed: number): Promise<void> {
     if (!this.treadmillWrite) return;
 

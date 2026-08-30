@@ -10,6 +10,7 @@ export interface Session {
   totalDistance: number;
   totalEnergy: number;
   currentSpeed: number;
+  state: string;
 }
 
 export class SessionManager extends EventEmitter {
@@ -22,6 +23,15 @@ export class SessionManager extends EventEmitter {
 
   getCurrentSession(): Session | null {
     return this.session;
+  }
+
+  pause(): void {
+    if (!this.session) return;
+    this.session.state = "paused";
+  }
+  resume(): void {
+    if (!this.session) return;
+    this.session.state = "running";
   }
 
   private ingest(data: TreadmillData): void {
@@ -51,6 +61,7 @@ export class SessionManager extends EventEmitter {
       totalDistance: data.TOTAL_DISTANCE ?? 0,
       totalEnergy: data.TOTAL_ENERGY ?? 0,
       currentSpeed: data.INSTANTANEOUS_SPEED ?? 0,
+      state: "running",
     };
     this.emit("sessionStart", this.session);
   }
@@ -70,6 +81,7 @@ export class SessionManager extends EventEmitter {
 
     this.session.currentSpeed = 0;
     this.session.endTime = new Date();
+    this.session.state = "stopped";
     this.emit("sessionEnd", this.session);
     this.session = null;
   }

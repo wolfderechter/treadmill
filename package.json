@@ -16,12 +16,12 @@
   "author": "wolfderechter",
   "license": "MIT",
   "dependencies": {
-    "@hono/node-server": "^2.1.1",
     "@stoprocent/noble": "^2.8.0",
-    "hono": "^4.13.5",
+    "express": "^5.2.1",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^26.0.0"
   },
   "allowScripts": {
