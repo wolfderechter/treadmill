@@ -22,7 +22,9 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^26.0.0"
+    "@types/node": "^26.0.0",
+    "@types/ws": "^8.18.1",
+    "ws": "^8.21.3"
   },
   "allowScripts": {
     "@stoprocent/noble@2.8.0": true,

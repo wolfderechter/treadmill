@@ -2,6 +2,7 @@ import { BleManager } from "./ble-manager.ts";
 import { SessionManager } from "./session-manager.ts";
 import { saveSession, getAllSessions } from "./storage.ts";
 import express from "express";
+import { createWebSocketServer } from "./websocket.ts";
 
 const app = express();
 const server = app.listen(3033, () => {
@@ -9,6 +10,7 @@ const server = app.listen(3033, () => {
 });
 const ble: BleManager = new BleManager();
 const sessions = new SessionManager(ble);
+createWebSocketServer(server, ble, sessions);
 
 sessions.on("sessionStart", (session) => {
   console.log("session started", session);
@@ -50,8 +52,8 @@ app.get("/api/sessions", (req, res) => {
   return res.json(sessions);
 });
 
-app.post("/api/start", (req, res) => {
-  ble.start();
+app.post("/api/start", async (req, res) => {
+  await ble.start();
   return res.send("treadmill started");
 });
 app.post("/api/stop", (req, res) => {

@@ -1,3 +1,70 @@
+const ws = new WebSocket(`ws://${location.host}`);
+
+ws.onmessage = (event) => {
+  console.log("message:", event.data);
+  dispatch(JSON.parse(event.data));
+};
+
+function dispatch(msg) {
+  switch (msg.type) {
+    case "connection":
+      statusPillPulse.className = msg.payload;
+      statusPill.textContent = msg.payload.toUpperCase();
+      break;
+    case "session":
+      if (msg.payload !== null) {
+        const session = msg.payload;
+        speed = session.currentSpeed;
+        distance = session.totalDistance;
+        time = formatDuration(session.elapsedTime);
+        sessionState = session.state;
+
+        speedDisplay.textContent = formatSpeed(speed);
+        distanceDisplay.textContent = formatDistance(distance);
+        timeDisplay.textContent = time;
+      } else {
+        speedDisplay.textContent = formatSpeed(0);
+        sessionState = "stopped";
+      }
+      render();
+      break;
+    case "state":
+      sessionState = msg.payload;
+      render();
+      break;
+  }
+}
+
+function render() {
+  const hasSession = sessionState !== "stopped";
+  const isRunning = sessionState === "running";
+
+  // Setup the start/pause/stop buttons depending if ther is a session or not
+  startBtn.style.display = hasSession ? "none" : "flex";
+  pauseResumeBtn.style.display = hasSession ? "flex" : "none";
+  stopBtn.style.display = hasSession ? "flex" : "none";
+
+  // Disable the minus/plus buttons when there is no session
+  minusBtn.disabled = !isRunning;
+  plusBtn.disabled = !isRunning;
+
+  // Setup the correct pause / resume state
+  pauseResumeLabel.textContent = isRunning ? "PAUSE" : "RESUME";
+  pauseResumeIcon.className = isRunning ? "ph-bold ph-pause" : "ph-bold ph-play";
+}
+
+// Handle errors
+ws.onerror = (error) => {
+  console.log("Error: " + error.message);
+};
+
+// Handle connection close
+ws.onclose = () => {
+  console.log("Disconnected from server");
+  // mark as disconnected
+  // add retry mechanism to try reconnecting with epxonential timeout
+};
+
 const minusBtn = document.getElementById("minus");
 const plusBtn = document.getElementById("plus");
 
@@ -19,86 +86,27 @@ let speed;
 let distance;
 let time;
 
-async function init() {
-  const response = await fetch("/api/session");
-
-  // if no response, mark as disconnected
-  if (!response.ok) {
-    statusPillPulse.className = "disconnected";
-    statusPill.textContent = "DISCONNECTED";
-    return;
-  }
-
-  const session = await response.json();
-  console.log("session", session);
-  if (session) {
-    speed = session.currentSpeed;
-    distance = session.totalDistance;
-    time = formatDuration(session.startTime, new Date());
-    sessionState = session.state;
-
-    speedDisplay.textContent = formatSpeed(speed);
-    distanceDisplay.textContent = formatDistance(distance);
-    timeDisplay.textContent = time;
-
-    pauseResumeBtn.style.display = "flex";
-    stopBtn.style.display = "flex";
-    startBtn.style.display = "none";
-  } else {
-    pauseResumeBtn.style.display = "none";
-    stopBtn.style.display = "none";
-    startBtn.style.display = "flex";
-  }
-
-  statusPillPulse.className = "connected";
-  statusPill.textContent = "CONNECTED";
-}
-
-init();
-
 startBtn.addEventListener("click", async () => {
-  const response = await fetch("/api/start", {
+  await fetch("/api/start", {
     method: "POST",
   });
-  if (response.ok) {
-    sessionState = "running";
-    startBtn.style.display = "none";
-    pauseResumeBtn.style.display = "flex";
-    stopBtn.style.display = "flex";
-  }
 });
 
 stopBtn.addEventListener("click", async () => {
-  const response = await fetch("/api/stop", {
+  await fetch("/api/stop", {
     method: "POST",
   });
-  if (response.ok) {
-    sessionState = "stoppped";
-    startBtn.style.display = "flex";
-    pauseResumeBtn.style.display = "none";
-    stopBtn.style.display = "none";
-  }
 });
 
 pauseResumeBtn.addEventListener("click", async () => {
   if (sessionState === "running") {
-    const response = await fetch("/api/pause", {
+    await fetch("/api/pause", {
       method: "POST",
     });
-    if (response.ok) {
-      sessionState = "paused";
-      pauseResumeLabel.textContent = "RESUME";
-      pauseResumeIcon.className = "ph-bold ph-play";
-    }
   } else if (sessionState === "paused") {
-    const response = await fetch("/api/resume", {
+    await fetch("/api/resume", {
       method: "POST",
     });
-    if (response.ok) {
-      sessionState = "running";
-      pauseResumeLabel.textContent = "PAUSE";
-      pauseResumeIcon.className = "ph-bold ph-pause";
-    }
   }
 });
 
@@ -133,13 +141,10 @@ function formatDistance(distance) {
   }
 }
 
-function formatDuration(startTime, endTime) {
-  const diffMs = Math.abs(new Date(endTime) - new Date(startTime));
-  const totalSeconds = Math.floor(diffMs / 1000);
-
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+function formatDuration(elapsedTimeInSeconds) {
+  const hours = Math.floor(elapsedTimeInSeconds / 3600);
+  const minutes = Math.floor((elapsedTimeInSeconds % 3600) / 60);
+  const seconds = elapsedTimeInSeconds % 60;
 
   const mm = String(minutes).padStart(2, "0"); // display with leading 0
   const ss = String(seconds).padStart(2, "0"); // display with leading 0

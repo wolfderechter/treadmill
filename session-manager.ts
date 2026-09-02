@@ -6,12 +6,14 @@ import { randomUUIDv7 } from "crypto";
 export interface Session {
   id: string;
   startTime: Date;
-  endTime?: Date;
+  elapsedTime: number;
   totalDistance: number;
   totalEnergy: number;
   currentSpeed: number;
-  state: string;
+  state: SessionState;
 }
+
+export type SessionState = "running" | "paused" | "stopped";
 
 export class SessionManager extends EventEmitter {
   private session: Session | null = null;
@@ -28,10 +30,12 @@ export class SessionManager extends EventEmitter {
   pause(): void {
     if (!this.session) return;
     this.session.state = "paused";
+    this.emit("stateChange", this.session.state);
   }
   resume(): void {
     if (!this.session) return;
     this.session.state = "running";
+    this.emit("stateChange", this.session.state);
   }
 
   private ingest(data: TreadmillData): void {
@@ -61,28 +65,31 @@ export class SessionManager extends EventEmitter {
       totalDistance: data.TOTAL_DISTANCE ?? 0,
       totalEnergy: data.TOTAL_ENERGY ?? 0,
       currentSpeed: data.INSTANTANEOUS_SPEED ?? 0,
+      elapsedTime: data.ELAPSED_TIME ?? 0,
       state: "running",
     };
     this.emit("sessionStart", this.session);
+    this.emit("stateChange", this.session.state);
   }
 
   private updateSession(data: TreadmillData): void {
     if (!this.session) return;
-
     this.session.currentSpeed =
       data.INSTANTANEOUS_SPEED ?? this.session.currentSpeed;
     this.session.totalDistance =
       data.TOTAL_DISTANCE ?? this.session.totalDistance;
     this.session.totalEnergy = data.TOTAL_ENERGY ?? this.session.totalEnergy;
+    this.session.elapsedTime = data.ELAPSED_TIME ?? this.session.elapsedTime;
+    this.emit("sessionData", this.session);
   }
 
   private endSession(): void {
     if (!this.session) return;
 
     this.session.currentSpeed = 0;
-    this.session.endTime = new Date();
     this.session.state = "stopped";
     this.emit("sessionEnd", this.session);
+    this.emit("stateChange", this.session.state);
     this.session = null;
   }
 }
