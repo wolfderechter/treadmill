@@ -160,6 +160,14 @@ body {
   bottom: 15px;
 }
 
+@media screen and (max-width: 600px) {
+  .lcd-screen .unit {
+    font-size: 0.65rem;
+    right: 10px;
+    bottom: 20px;
+  }
+}
+
 /* Tactile Keys */
 .key-btn {
   width: 54px;
@@ -181,14 +189,20 @@ body {
     box-shadow 0.05s ease;
 }
 
+.key-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .key-btn:active {
   transform: translateY(4px);
   box-shadow: 0 1px 0 #d0c9b8;
 }
+
 .telemetry {
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1.75rem;
   padding: 0.75rem 0;
   border-top: 2px dashed #b8b2a2;
