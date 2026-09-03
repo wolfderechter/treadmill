@@ -6,22 +6,22 @@ db.exec(`
         CREATE TABLE IF NOT EXISTS sessions (
             id TEXT PRIMARY KEY,
             startTime TEXT NOT NULL,
-            endTime TEXT NOT NULL,
-            total_distance INTEGER NOT NULL,
-            total_energy INTEGER NOT NULL
+            elapsedTime INTEGER NOT NULL,
+            totalDistance INTEGER NOT NULL,
+            totalEnergy INTEGER NOT NULL
         )
     `);
 
 export function saveSession(session: Session) {
   const insert = db.prepare(`
-    INSERT INTO sessions (id, startTime, endTime, total_distance, total_energy)
+    INSERT INTO sessions (id, startTime, elapsedTime, totalDistance, totalEnergy)
     VALUES (?, ?, ?, ?, ?)
   `);
 
   insert.run(
     session.id,
     session.startTime.toISOString(),
-    session.endTime!.toISOString(),
+    session.elapsedTime,
     session.totalDistance,
     session.totalEnergy,
   );
