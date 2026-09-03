@@ -128,6 +128,8 @@ minusBtn.addEventListener("click", () => {
   });
 });
 
+document.addEventListener("touchstart", () => { }, { passive: true }); // fix for ios buttons not pressing down
+
 function formatSpeed(speed) {
   return (speed / 100).toFixed(1);
 }
