@@ -50,7 +50,9 @@ function render() {
 
   // Setup the correct pause / resume state
   pauseResumeLabel.textContent = isRunning ? "PAUSE" : "RESUME";
-  pauseResumeIcon.className = isRunning ? "ph-bold ph-pause" : "ph-bold ph-play";
+  pauseResumeIcon.className = isRunning
+    ? "ph-bold ph-pause"
+    : "ph-bold ph-play";
 }
 
 // Handle errors
@@ -76,6 +78,8 @@ const pauseResumeLabel = document.getElementById("pause-resume-label");
 const statusPill = document.getElementById("status-pill");
 const statusPillPulse = document.getElementById("status-pill-pulse");
 const distanceMetric = document.getElementById("distance-metric");
+const countdownOverlay = document.getElementById("countdown-overlay");
+const countdownCount = document.getElementById("countdown-count");
 
 const speedDisplay = document.getElementById("speed");
 const distanceDisplay = document.getElementById("distance");
@@ -90,7 +94,32 @@ startBtn.addEventListener("click", async () => {
   await fetch("/api/start", {
     method: "POST",
   });
+  speedDisplay.textContent = formatSpeed(1); // optimistically prefill the speed to 1
+  countDown();
 });
+
+function countDown() {
+  countdownOverlay.className = ""; // removes the .hidden class so the overlay shows up
+
+  let count = 3;
+  function updateCountDown() {
+    countdownCount.textContent = count;
+    countdownCount.animate(
+      [
+        { transform: "scale(1.25)", opacity: 0.4 },
+        { transform: "scale(1)", opacity: 1 },
+      ],
+      { duration: 300, easing: "ease-out" },
+    );
+    count--;
+    if (count === -1) {
+      countdownOverlay.className = "hidden";
+      clearInterval(countdownTimer);
+    }
+  }
+  updateCountDown(); // fire immediately
+  const countdownTimer = setInterval(updateCountDown, 1000);
+}
 
 stopBtn.addEventListener("click", async () => {
   await fetch("/api/stop", {
@@ -107,6 +136,7 @@ pauseResumeBtn.addEventListener("click", async () => {
     await fetch("/api/resume", {
       method: "POST",
     });
+    countDown();
   }
 });
 
@@ -128,7 +158,7 @@ minusBtn.addEventListener("click", () => {
   });
 });
 
-document.addEventListener("touchstart", () => { }, { passive: true }); // fix for ios buttons not pressing down
+document.addEventListener("touchstart", () => {}, { passive: true }); // fix for ios buttons not pressing down
 
 function formatSpeed(speed) {
   return (speed / 100).toFixed(1);
