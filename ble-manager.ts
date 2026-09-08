@@ -14,60 +14,54 @@ const RECONNECT_DELAY_MS = 2000;
 export class BleManager extends EventEmitter {
   private treadmill: Peripheral | null = null;
   private treadmillWrite: Characteristic | null = null;
+  // Control point writes must reach the treadmill one at a time and in order.
+  private queue: Promise<unknown> = Promise.resolve();
 
   isConnected(): boolean {
     return this.treadmill !== null;
   }
 
-  async setSpeed(speed: number): Promise<void> {
-    if (!this.treadmillWrite) return;
-
-    await this.requestControl();
-
-    const speedBuffer = Buffer.alloc(3);
-    speedBuffer.writeUInt8(0x02, 0);
-    speedBuffer.writeUInt16LE(speed, 1);
-    await this.treadmillWrite.writeAsync(speedBuffer, false);
+  setSpeed(speed: number): Promise<void> {
+    return this.controlPoint(0x02, speed, "setSpeed");
   }
-  async start(): Promise<void> {
-    if (!this.treadmillWrite) return;
-
-    await this.requestControl();
-
-    const speedBuffer = Buffer.alloc(3);
-    speedBuffer.writeUInt8(0x07, 0);
-    speedBuffer.writeUInt16LE(0, 1);
-    await this.treadmillWrite.writeAsync(speedBuffer, false);
+  start(): Promise<void> {
+    return this.controlPoint(0x07, 0x00, "start");
   }
-  async resume(): Promise<void> {
-    if (!this.treadmillWrite) return;
-
-    await this.requestControl();
-
-    const speedBuffer = Buffer.alloc(3);
-    speedBuffer.writeUInt8(0x07, 0);
-    speedBuffer.writeUInt16LE(0x02, 1);
-    await this.treadmillWrite.writeAsync(speedBuffer, false);
+  resume(): Promise<void> {
+    return this.controlPoint(0x07, 0x02, "resume");
   }
-  async stop(): Promise<void> {
-    if (!this.treadmillWrite) return;
-
-    await this.requestControl();
-
-    const speedBuffer = Buffer.alloc(3);
-    speedBuffer.writeUInt8(0x08, 0);
-    speedBuffer.writeUInt16LE(0x01, 1);
-    await this.treadmillWrite.writeAsync(speedBuffer, false);
+  stop(): Promise<void> {
+    return this.controlPoint(0x08, 0x01, "stop");
   }
-  async pause(): Promise<void> {
-    if (!this.treadmillWrite) return;
+  pause(): Promise<void> {
+    return this.controlPoint(0x08, 0x02, "pause");
+  }
 
-    await this.requestControl();
+  private controlPoint(
+    opcode: number,
+    value: number,
+    label: string,
+  ): Promise<void> {
+    const buffer = Buffer.alloc(3);
+    buffer.writeUInt8(opcode, 0);
+    buffer.writeUInt16LE(value, 1);
+    // Errors are logged here so fire-and-forget callers can't turn into
+    // unhandled rejections.
+    return this.enqueue(() => this.sendControlPoint(buffer)).catch((error) => {
+      console.error(`${label} failed:`, (error as Error).message);
+    });
+  }
 
-    const speedBuffer = Buffer.alloc(3);
-    speedBuffer.writeUInt8(0x08, 0);
-    speedBuffer.writeUInt16LE(0x02, 1);
-    await this.treadmillWrite.writeAsync(speedBuffer, false);
+  private enqueue<T>(op: () => Promise<T>): Promise<T> {
+    // append the op to the queue, so it runs after everything queued before it
+    const result = this.queue.then(op);
+    this.queue = result.catch(() => {}); // keep the chain alive if error
+    return result;
+  }
+
+  private async sendControlPoint(buffer: Buffer): Promise<void> {
+    if (!this.treadmillWrite) return; // disconnected, nothing to send
+    await this.treadmillWrite.writeAsync(buffer, false);
   }
 
   async connect(): Promise<void> {
@@ -105,10 +99,19 @@ export class BleManager extends EventEmitter {
           console.log("control point response", buffer);
         });
 
+        // Take over the FTMS control point once per connection
+        // afterwards the treadmill accepts speed/start/stop writes without a requestControl
+        try {
+          await this.requestControl();
+        } catch (error) {
+          console.error("requestControl failed:", (error as Error).message);
+        }
+
         this.emit("connected");
 
         peripheral.on("disconnect", () => {
           this.treadmill = null;
+          this.treadmillWrite = null;
           this.emit("disconnected");
           this.reconnect();
         });
@@ -132,22 +135,31 @@ export class BleManager extends EventEmitter {
   private async requestControl(): Promise<void> {
     if (!this.treadmillWrite) return;
 
-    const responsePromise = this.waitForResponse();
     const requestControl = Buffer.alloc(1);
     requestControl.writeUInt8(0x00, 0);
     await this.treadmillWrite.writeAsync(requestControl, false);
-    const response = await responsePromise;
+    const response = await this.waitForResponse();
 
     if (response[2] !== 0x01) {
       throw new Error(`Request control failed with result: ${response[2]}`);
     }
   }
 
-  private waitForResponse(): Promise<Buffer> {
-    return new Promise((resolve) => {
-      this.treadmillWrite!.once("data", (buffer) => {
+  // Wait for the control point response. The timeout removes the listener if
+  // the treadmill never answers, instead of leaking it.
+  private waitForResponse(timeoutMs = 500): Promise<Buffer> {
+    const characteristic = this.treadmillWrite!;
+    return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout>;
+      const onData = (buffer: Buffer) => {
+        clearTimeout(timer);
         resolve(buffer);
-      });
+      };
+      timer = setTimeout(() => {
+        characteristic.off("data", onData);
+        reject(new Error("control point response timed out"));
+      }, timeoutMs);
+      characteristic.once("data", onData);
     });
   }
 }
