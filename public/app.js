@@ -10,6 +10,8 @@ function dispatch(msg) {
     case "connection":
       statusPillPulse.className = msg.payload;
       statusPill.textContent = msg.payload.toUpperCase();
+      const isConnected = msg.payload.toUpperCase() === "CONNECTED";
+      startBtn.disabled = !isConnected;
       break;
     case "session":
       if (msg.payload !== null) {

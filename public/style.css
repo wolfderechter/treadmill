@@ -232,6 +232,7 @@ body {
     box-shadow 0.05s ease;
 }
 
+#start:disabled,
 .key-btn:disabled {
   opacity: 0.4;
   pointer-events: none;
