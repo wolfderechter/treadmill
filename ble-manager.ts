@@ -2,6 +2,7 @@ import noble from "@stoprocent/noble";
 import type { Characteristic, Peripheral } from "@stoprocent/noble";
 import { decodeTreadmillData } from "./util.ts";
 import { EventEmitter } from "events";
+import PQueue from "p-queue";
 
 const deviceName = process.env.DEVICE_NAME || "FS-7F5603";
 const RECONNECT_DELAY_MS = 2000;
@@ -14,8 +15,7 @@ const RECONNECT_DELAY_MS = 2000;
 export class BleManager extends EventEmitter {
   private treadmill: Peripheral | null = null;
   private treadmillWrite: Characteristic | null = null;
-  // Control point writes must reach the treadmill one at a time and in order.
-  private queue: Promise<unknown> = Promise.resolve();
+  private queue = new PQueue({ concurrency: 1, timeout: 5000 });
 
   isConnected(): boolean {
     return this.treadmill !== null;
@@ -47,16 +47,11 @@ export class BleManager extends EventEmitter {
     buffer.writeUInt16LE(value, 1);
     // Errors are logged here so fire-and-forget callers can't turn into
     // unhandled rejections.
-    return this.enqueue(() => this.sendControlPoint(buffer)).catch((error) => {
-      console.error(`${label} failed:`, (error as Error).message);
-    });
-  }
-
-  private enqueue<T>(op: () => Promise<T>): Promise<T> {
-    // append the op to the queue, so it runs after everything queued before it
-    const result = this.queue.then(op);
-    this.queue = result.catch(() => {}); // keep the chain alive if error
-    return result;
+    return this.queue
+      .add(() => this.sendControlPoint(buffer))
+      .catch((error) =>
+        console.error(`${label} failed:`, (error as Error).message),
+      );
   }
 
   private async sendControlPoint(buffer: Buffer): Promise<void> {
