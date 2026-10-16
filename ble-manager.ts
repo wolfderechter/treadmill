@@ -1,4 +1,4 @@
-import noble from "@stoprocent/noble";
+import { withBindings } from "@stoprocent/noble";
 import type { Characteristic, Peripheral } from "@stoprocent/noble";
 import { decodeTreadmillData } from "./util.ts";
 import { EventEmitter } from "events";
@@ -6,6 +6,9 @@ import PQueue from "p-queue";
 
 const deviceName = process.env.DEVICE_NAME || "FS-7F5603";
 const RECONNECT_DELAY_MS = 2000;
+// Go through BlueZ over D-Bus instead of the raw HCI socket
+process.env.NOBLE_BINDINGS = "dbus";
+const noble = withBindings("default");
 
 // OP codes: see '4.16.1 Fitness Machine Control Point Procedure Requirements' of the FTMS manual
 // 0x00: request control
@@ -61,8 +64,8 @@ export class BleManager extends EventEmitter {
 
   async connect(): Promise<void> {
     await noble.waitForPoweredOnAsync();
-    await noble.startScanningAsync(["1826"], false); // scan for FTMS devices only
 
+    // Register before scanning: with D-Bus, devices BlueZ already knows about are reported while startScanningAsync is still running (resulting in a race condition).
     noble.on("discover", async (peripheral) => {
       if (peripheral.advertisement.localName !== deviceName) return;
 
@@ -115,6 +118,8 @@ export class BleManager extends EventEmitter {
         this.reconnect();
       }
     });
+
+    await noble.startScanningAsync(["1826"], false); // scan for FTMS devices only
   }
 
   async cleanup(): Promise<void> {
@@ -132,8 +137,11 @@ export class BleManager extends EventEmitter {
 
     const requestControl = Buffer.alloc(1);
     requestControl.writeUInt8(0x00, 0);
-    await this.treadmillWrite.writeAsync(requestControl, false);
-    const response = await this.waitForResponse();
+    // Start listening before writing: with D-Bus the response can arrive before writeAsync resolves.
+    const [response] = await Promise.all([
+      this.waitForResponse(),
+      this.treadmillWrite.writeAsync(requestControl, false),
+    ]);
 
     if (response[2] !== 0x01) {
       throw new Error(`Request control failed with result: ${response[2]}`);
