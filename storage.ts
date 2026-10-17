@@ -27,9 +27,21 @@ export function saveSession(session: Session) {
   );
 }
 
-export function getAllSessions() {
-  const sessions = db.prepare(`
-    SELECT * FROM sessions
-    `);
-  return sessions.all();
+export function getSessions(since?: Date) {
+  if (!since)
+    return db
+      .prepare(
+        `
+    SELECT * FROM sessions ORDER BY startTime DESC
+    `,
+      )
+      .all();
+
+  return db
+    .prepare(
+      `
+    SELECT * FROM sessions WHERE startTime >= ? ORDER BY startTime DESC
+    `,
+    )
+    .all(since.toISOString());
 }

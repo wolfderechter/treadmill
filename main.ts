@@ -1,8 +1,9 @@
 import { BleManager } from "./ble-manager.ts";
 import { SessionManager } from "./session-manager.ts";
-import { saveSession, getAllSessions } from "./storage.ts";
+import { saveSession, getSessions } from "./storage.ts";
 import express from "express";
 import { createWebSocketServer } from "./websocket.ts";
+import { PERIOD_TO_DAYS } from "./util.ts";
 
 const app = express();
 const server = app.listen(3033, () => {
@@ -48,8 +49,19 @@ app.get("/api/session", (req, res) => {
   return res.json(currentSession);
 });
 app.get("/api/sessions", (req, res) => {
-  const sessions = getAllSessions();
-  return res.json(sessions);
+  const period = req.query.period ?? "all"; // default to sending all sessions if no period is specified
+  if (period === "all") return res.json(getSessions());
+
+  if (typeof period !== "string" || !Object.hasOwn(PERIOD_TO_DAYS, period)) {
+    return res
+      .status(400)
+      .json({ error: "period must be: week, month, year or all" });
+  }
+
+  const days = PERIOD_TO_DAYS[period as keyof typeof PERIOD_TO_DAYS];
+  return res.json(
+    getSessions(new Date(Date.now() - days * 24 * 60 * 60 * 1000)),
+  );
 });
 
 app.post("/api/start", async (req, res) => {

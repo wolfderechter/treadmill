@@ -23,13 +23,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
 body {
   font-family: ui-monospace, "SF Mono", "Consolas", system-ui, sans-serif;
   background-color: #e3dfd5;
@@ -38,15 +31,13 @@ body {
   color: var(--text-dark);
   min-height: 100dvh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   padding: 1.5rem;
-  position: fixed;
-  inset: 0;
 }
 
 /* Wrapper Layout */
-.container {
+.layout {
   width: 100%;
   max-width: 410px;
 }
@@ -77,14 +68,15 @@ body {
     0 20px 40px rgba(0, 0, 0, 0.08),
     0 6px 0px var(--chassis-shadow),
     inset 0 2px 0 #ffffff;
+  margin-bottom: 2rem;
 }
 
 /* Deck Header aligned right */
 .deck-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1rem;
 }
 
 #countdown-overlay.hidden {
@@ -183,15 +175,15 @@ body {
   border: 2px solid #362d22;
   min-height: 76px;
   position: relative;
+  color: var(--lcd-amber);
+  text-shadow: 0 0 10px rgba(255, 176, 0, 0.45);
 }
 
 .speed-val {
   font-size: 2.75rem;
   font-weight: 700;
-  color: var(--lcd-amber);
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 10px rgba(255, 176, 0, 0.45);
 }
 
 .lcd-screen .unit {
@@ -332,4 +324,140 @@ body {
 .pad-btn:active {
   transform: translateY(4px);
   box-shadow: 0 1px 0 transparent !important;
+}
+
+/* History deck */
+
+.period-switch {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: none;
+  border-radius: 10px;
+  background: #e7e2d5;
+}
+
+.period-switch label {
+  cursor: pointer;
+  display: flex;
+}
+
+.period-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.period-switch span {
+  display: block;
+  padding: 0.4rem 0.65rem;
+  border-radius: 7px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
+}
+
+.period-switch input:checked + span {
+  background: var(--key-bg);
+  color: var(--text-dark);
+  box-shadow: 0 2px 0 #d0c9b8;
+}
+
+.period-switch input:focus-visible + span {
+  outline: 2px solid var(--lcd-amber);
+  outline-offset: 2px;
+}
+
+.period-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.period-steps {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px dashed #b8b2a2;
+}
+
+#period-steps-count {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.period-overview {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1rem;
+}
+
+.period-overview .label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.period-overview span {
+  font-weight: 800;
+}
+
+.last-sessions {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px dashed #b8b2a2;
+}
+
+/* rows share one set of columns (subgrid) so they line up across sessions */
+#last-sessions {
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  column-gap: 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+#last-sessions li {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 0.85rem 0;
+}
+
+#last-sessions li + li {
+  border-top: 1px solid #e7e2d5;
+}
+
+.session-when,
+.session-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.session-stats {
+  align-items: flex-end;
+}
+
+.session-meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media screen and (max-width: 480px) {
+  /* Hide the energy stats on mobile */
+  .session-stats .session-meta {
+    display: none;
+  }
 }
