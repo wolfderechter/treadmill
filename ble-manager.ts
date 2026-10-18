@@ -15,6 +15,11 @@ const noble = withBindings("default");
 // 0x02: set speed
 // 0x07: start (0x01) or resume (0x02)
 // 0x08: stop (0x01) or pause (0x02)
+
+function log(message: string, buffer?: Buffer): void {
+  console.log(`[${new Date().toLocaleTimeString()}] ${message}`, buffer ?? "");
+}
+
 export class BleManager extends EventEmitter {
   private treadmill: Peripheral | null = null;
   private treadmillWrite: Characteristic | null = null;
@@ -94,26 +99,29 @@ export class BleManager extends EventEmitter {
         await this.treadmillWrite?.subscribeAsync();
         this.treadmillWrite?.on("data", (buffer) => {
           // this is the response from the treadmill
-          console.log("control point response", buffer);
+          log("control point response", buffer);
         });
 
         // Take over the FTMS control point once per connection
         // afterwards the treadmill accepts speed/start/stop writes without a requestControl
         try {
-          await this.requestControl();
+          await this.queue.add(() => this.requestControl());
         } catch (error) {
           console.error("requestControl failed:", (error as Error).message);
         }
 
         this.emit("connected");
 
-        peripheral.on("disconnect", () => {
+        peripheral.once("disconnect", () => {
+          log("treadmill disconnected");
           this.treadmill = null;
           this.treadmillWrite = null;
           this.emit("disconnected");
           this.reconnect();
         });
       } catch (error) {
+        this.treadmill = null;
+        this.treadmillWrite = null;
         this.emit("disconnected");
         this.reconnect();
       }
@@ -123,6 +131,7 @@ export class BleManager extends EventEmitter {
   }
 
   async cleanup(): Promise<void> {
+    await this.queue.onIdle();
     await this.treadmill?.disconnectAsync();
     await noble.stopScanningAsync();
   }
