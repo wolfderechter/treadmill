@@ -1,0 +1,14 @@
+services:
+  treadmill:
+    build: .
+    container_name: treadmill
+    restart: unless-stopped
+    ports:
+      - "3033:3033"
+    volumes:
+      - ./treadmill.db:/app/treadmill.db
+      # BLE goes through the host's BlueZ over the system D-Bus
+      - /run/dbus:/run/dbus
+    # Ubuntu's AppArmor blocks D-Bus calls from the default Docker profile
+    # security_opt:
+      # - apparmor:unconfined
