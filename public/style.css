@@ -187,20 +187,13 @@ body {
 }
 
 .lcd-screen .unit {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: var(--lcd-amber-dim);
   font-weight: 700;
   position: absolute;
-  right: 33px;
-  bottom: 15px;
-}
-
-@media screen and (max-width: 600px) {
-  .lcd-screen .unit {
-    font-size: 0.65rem;
-    right: 10px;
-    bottom: 20px;
-  }
+  bottom: 5px;
+  right: 10px;
+  line-height: 1;
 }
 
 /* Tactile Keys */
@@ -459,5 +452,13 @@ body {
   /* Hide the energy stats on mobile */
   .session-stats .session-meta {
     display: none;
+  }
+
+  .pod-val {
+    font-size: 1.25rem;
+  }
+
+  #period-steps-count {
+    font-size: 2rem;
   }
 }
