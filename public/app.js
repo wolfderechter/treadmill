@@ -273,7 +273,6 @@ function formatDay(date) {
   const daysAgo = Math.round((today - day) / 86_400_000); // round to handle DST days of 23/25h
 
   if (daysAgo === 0) return "today";
-  if (daysAgo === 1) return "yesterday";
   if (daysAgo < 7)
     return date.toLocaleDateString("en-GB", { weekday: "short" });
   return date.toLocaleDateString("en-GB", {
