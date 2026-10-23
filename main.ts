@@ -83,11 +83,16 @@ app.post("/api/resume", (req, res) => {
   return res.send("treadmill resumed");
 });
 app.post("/api/speed", (req, res) => {
-  const speed = req.query.speed;
+  const speed = Number(req.query.speed);
   if (!speed)
     return res
       .status(400)
       .json({ error: "Missing required query parameter: speed" });
+
+  if (!Number.isInteger(speed) || speed < 100 || speed > 2500)
+    return res
+      .status(400)
+      .json({ error: "speed must be an integer between 100 and 2500" });
 
   ble.setSpeed(Number(speed));
   return res.send(`treadmill speed set to ${speed}`);
