@@ -1,4 +1,7 @@
-const ws = new WebSocket(`ws://${location.host}`);
+const ws = new WebSocket(
+  (location.protocol === "https:" ? "wss://" : "ws://") + location.host,
+);
+const STEP_LENGTH_M = 0.6;
 
 ws.onmessage = (event) => {
   console.log("message:", event.data);
@@ -283,8 +286,7 @@ function formatDay(date) {
 }
 
 function convertDistanceToSteps(distanceInMeters) {
-  const averageStepLengthInMeters = 0.6; // average step length in meters
-  return Math.round(distanceInMeters / averageStepLengthInMeters);
+  return Math.round(distanceInMeters / STEP_LENGTH_M);
 }
 
 // load in history in page load
